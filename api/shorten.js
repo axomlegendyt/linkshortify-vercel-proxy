@@ -1,35 +1,20 @@
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Only POST method allowed' });
+    return res.status(405).json({ error: 'Only POST allowed' });
   }
 
-  const { url, domain, api } = req.body;
+  const { url } = req.body;
 
-  if (!url || !domain || !api) {
-    return res.status(400).json({ error: 'Missing required fields' });
+  if (!url) {
+    return res.status(400).json({ error: 'Missing "url" in request body' });
   }
 
   try {
-    const response = await fetch(`https://${domain}/api`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        url: url,
-        api: api,
-      }),
-    });
+    const response = await fetch(`https://api.shareus.io/easy_api?key=ZxhpVXCSgwXQZuYlxSByEh9U8yy1&link=${encodeURIComponent(url)}`);
+    const shortUrl = await response.text(); // Because Shareus returns plain text
 
-    const data = await response.json();
-
-    if (data.shortenedUrl) {
-      return res.status(200).json({ shortenedUrl: data.shortenedUrl });
-    } else {
-      return res.status(500).json({ error: 'Shortening failed', data });
-    }
-
+    res.status(200).json({ shortUrl });
   } catch (err) {
-    return res.status(500).json({ error: 'Server Error', details: err.message });
+    res.status(500).json({ error: 'Shortening failed', details: err.message });
   }
 }
