@@ -3,21 +3,33 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Only POST method allowed' });
   }
 
-  const { url } = req.body;
+  const { url, domain, api } = req.body;
 
-  const response = await fetch('https://linkshortify.com/api', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      url,
-      domain: "linkshortify.com",
-      api: "5a29931787e04de46acfc9d8c2e81bfca2d9a5a0"
-    }),
-  });
+  if (!url || !domain || !api) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
 
-  const data = await response.json();
+  try {
+    const response = await fetch(`https://${domain}/api`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: url,
+        api: api,
+      }),
+    });
 
-  return res.status(200).json(data);
+    const data = await response.json();
+
+    if (data.shortenedUrl) {
+      return res.status(200).json({ shortenedUrl: data.shortenedUrl });
+    } else {
+      return res.status(500).json({ error: 'Shortening failed', data });
+    }
+
+  } catch (err) {
+    return res.status(500).json({ error: 'Server Error', details: err.message });
+  }
 }
