@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Redirecting...</title>
+</head>
+<body>
+  <h3>Redirecting, please wait...</h3>
+  <script>
+    (async () => {
+      const url = new URLSearchParams(window.location.search).get("url");
+      if (!url) {
+        document.body.innerHTML = "<h2>No URL found in query string.</h2>";
+        return;
+      }
+
+      try {
+        new URL(url); // Validate
+      } catch {
+        document.body.innerHTML = "<h3>Invalid URL provided.</h3>";
+        return;
+      }
+
+      const encoded = encodeURIComponent(url);
+      const token = "ZxhpVXCSgwXQZuYlxSByEh9U8yy1"; // Your API key
+      const api = `https://api.shareus.io/easy_api?key=${token}&url=${encoded}`;
+
+      try {
+        const res = await fetch(api);
+        const data = await res.json();
+        const shortUrl = data.shortenedUrl || data.shortened_url;
+
+        if (shortUrl) {
+          window.location.href = shortUrl;
+        } else {
+          document.body.innerHTML = "<h3>Failed to shorten link.</h3><pre>" + JSON.stringify(data) + "</pre>";
+        }
+      } catch (e) {
+        document.body.innerHTML = "<h3>Error occurred while redirecting.</h3><pre>" + e.message + "</pre>";
+      }
+    })();
+  </script>
+</body>
+</html>
